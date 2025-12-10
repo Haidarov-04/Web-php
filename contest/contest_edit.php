@@ -54,26 +54,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: contest.php");
             exit;
         } else {
-            $message = "Error: " . $stmt->error;
+            $message = "Ошибка: " . $stmt->error;
         }
         $stmt->close();
     } else {
-        $message = "Название конкурса и тип конкурса обязательны для заполнения.";
+        $message = "Название и тип конкурса обязательны.";
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Изменить конкурс</title>
+    <title>Редактировать конкурс</title>
     <link rel="stylesheet" href="../admin/auth_style.css">
     <link rel="stylesheet" href="../admin/topbar.css">
 </head>
 <body>
     <?php include '../admin/topbar.php'; ?>
     <div class="container">
-        <h1>Изменить конкурс</h1>
+        <h1>Редактировать конкурс</h1>
 
         <?php if (!empty($message)): ?>
             <p style="color: red;"><?= htmlspecialchars($message); ?></p>

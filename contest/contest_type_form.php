@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: contest_type.php");
             exit;
         } else {
-            $message = "Error: " . $conn->error;
+            $message = "Ошибка: " . $conn->error;
         }
     } else {
         $message = "Название типа конкурса не может быть пустым.";
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Добавить тип конкурса</title>

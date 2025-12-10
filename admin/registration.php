@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
-            $error = "Username or email already exists!";
+            $error = "Имя пользователя или email уже существует!";
         } else {
             $hash = password_hash($password, PASSWORD_DEFAULT);
 
@@ -29,13 +29,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_param("sssi", $username, $email, $hash, $role_id);
 
             if ($stmt->execute()) {
-                $success = "Registration successful!";
+                $success = "Регистрация прошла успешно!";
             } else {
-                $error = "Error: " . $stmt->error;
+                $error = "Ошибка: " . $stmt->error;
             }
         }
     } else {
-        $error = "All fields are required!";
+        $error = "Все поля обязательны для заполнения!";
     }
 }
 
@@ -43,16 +43,16 @@ $roles = $conn->query("SELECT * FROM role");
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
+    <title>Регистрация</title>
     <link rel="stylesheet" href="auth_style.css">
 </head>
 <body>
 
 <div class="container">
-    <h2>Register</h2>
+    <h2>Регистрация</h2>
     <?php if ($error): ?>
         <div class="message error"><?php echo $error; ?></div>
     <?php endif; ?>
@@ -62,7 +62,7 @@ $roles = $conn->query("SELECT * FROM role");
 
     <form method="post" action="">
         <div class="form-group">
-            <label>Username:</label>
+            <label>Имя пользователя:</label>
             <input type="text" name="username" required>
         </div>
         <div class="form-group">
@@ -70,11 +70,11 @@ $roles = $conn->query("SELECT * FROM role");
             <input type="email" name="email" required>
         </div>
         <div class="form-group">
-            <label>Password:</label>
+            <label>Пароль:</label>
             <input type="password" name="password" required>
         </div>
         <div class="form-group">
-            <label>Role:</label>
+            <label>Роль:</label>
             <select name="role_id">
                 <?php while($role = $roles->fetch_assoc()): ?>
                     <option value="<?= $role['role_id'] ?>"><?php echo $role['role']; ?></option>
@@ -82,12 +82,12 @@ $roles = $conn->query("SELECT * FROM role");
             </select>
         </div>
         <div class="form-group">
-            <input type="submit" value="Register">
+            <input type="submit" value="Зарегистрироваться">
         </div>
     </form>
 
     <div class="text-center">
-        <a href="login.php">Already have an account? Login here</a>
+        <a href="login.php">Уже есть аккаунт? Войдите здесь</a>
     </div>
 </div>
 

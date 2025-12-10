@@ -73,10 +73,10 @@ $roles = $conn->query("SELECT * FROM role");
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <title>Панель администратора</title>
     <link rel="stylesheet" href="auth_style.css">
     <link rel="stylesheet" href="topbar.css">
 </head>
@@ -86,9 +86,9 @@ $roles = $conn->query("SELECT * FROM role");
     <?php include 'topbar.php'; ?>
 
     <div class="content">
-        <h1>Admin Dashboard</h1>
-        <p class="text-center">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>! (<?php echo htmlspecialchars($role['role']); ?>)</p>
-        <p>This is the admin dashboard. You can manage users and other site settings here.</p>
+        <h1>Панель администратора</h1>
+        <p class="text-center">Добро пожаловать, <?php echo htmlspecialchars($_SESSION['username']); ?>! (<?php echo htmlspecialchars($role['role']); ?>)</p>
+        <p>Это панель администратора. Здесь вы можете управлять пользователями и другими настройками сайта.</p>
 
         <?php if ($message): ?>
         <div class="message <?php echo strpos($message, 'Error') !== false ? 'error' : 'success'; ?>">
@@ -97,19 +97,19 @@ $roles = $conn->query("SELECT * FROM role");
         <?php endif; ?>
 
         <form action="dashboard.php" method="get">
-            <input type="text" name="search" placeholder="Search by username or email" value="<?php echo htmlspecialchars($search); ?>">
-            <input type="submit" value="Search">
+            <input type="text" name="search" placeholder="Поиск по имени пользователя или email" value="<?php echo htmlspecialchars($search); ?>">
+            <input type="submit" value="Поиск">
         </form>
 
-        <h3>Registered Users</h3>
+        <h3>Зарегистрированные пользователи</h3>
         <table>
             <tr>
                 <th><a href="?sort=id&order=<?php echo $sort == 'id' && $order == 'desc' ? 'asc' : 'desc'; ?>">ID</a></th>
-                <th><a href="?sort=username&order=<?php echo $sort == 'username' && $order == 'desc' ? 'asc' : 'desc'; ?>">Username</a></th>
+                <th><a href="?sort=username&order=<?php echo $sort == 'username' && $order == 'desc' ? 'asc' : 'desc'; ?>">Имя пользователя</a></th>
                 <th><a href="?sort=mail&order=<?php echo $sort == 'mail' && $order == 'desc' ? 'asc' : 'desc'; ?>">Email</a></th>
-                <th><a href="?sort=r.role&order=<?php echo $sort == 'r.role' && $order == 'desc' ? 'asc' : 'desc'; ?>">Role</a></th>
+                <th><a href="?sort=r.role&order=<?php echo $sort == 'r.role' && $order == 'desc' ? 'asc' : 'desc'; ?>">Роль</a></th>
                 <?php if ($is_admin): ?>
-                <th>Action</th>
+                <th>Действие</th>
                 <?php endif; ?>
             </tr>
             <?php while($user = $users_result->fetch_assoc()): ?>
@@ -120,8 +120,8 @@ $roles = $conn->query("SELECT * FROM role");
                 <td><?php echo htmlspecialchars($user['role']); ?></td>
                 <?php if ($is_admin): ?>
                 <td>
-                    <a href="edit_user.php?id=<?php echo $user['id']; ?>">Edit</a>
-                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                    <a href="edit_user.php?id=<?php echo $user['id']; ?>">Редактировать</a>
+                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" onclick="return confirm('Вы уверены, что хотите удалить этого пользователя?');">Удалить</a>
                 </td>
                 <?php endif; ?>
             </tr>

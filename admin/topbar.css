@@ -7,7 +7,7 @@
     overflow: hidden;
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     display: flex;
-    justify-content: flex-start; /* Group buttons to the left */
+    justify-content: space-between; /* Group buttons to the left */
     align-items: center;
     z-index: 1000; /* Ensure it's on top */
     padding: 5px 10px; /* Add some padding */

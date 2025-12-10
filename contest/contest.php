@@ -16,7 +16,7 @@ if (isset($_GET['delete'])) {
         header("Location: contest.php");
         exit;
     } else {
-        echo "Error deleting record: " . $conn->error;
+        echo "Ошибка удаления записи: " . $conn->error;
     }
 }
 
@@ -28,7 +28,7 @@ $result = $conn->query($sql);
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Конкурсы</title>

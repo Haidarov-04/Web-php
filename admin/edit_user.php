@@ -24,14 +24,14 @@ if (isset($_SESSION['role_id'])) {
 }
 
 if (!$is_admin) {
-    echo "You are not authorized to view this page.";
+    echo "У вас нет прав для просмотра этой страницы.";
     exit;
 }
 
 // Get user data
 $user_id = $_GET['id'] ?? null;
 if (!$user_id) {
-    header("Location: dashboard.php?message=Error: User ID not specified.");
+    header("Location: dashboard.php?message=Ошибка: не указан ID пользователя.");
     exit;
 }
 
@@ -47,10 +47,10 @@ $roles_result = $conn->query("SELECT * FROM role");
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Edit User</title>
+    <title>Редактировать пользователя</title>
     <link rel="stylesheet" href="auth_style.css">
     <link rel="stylesheet" href="topbar.css">
 </head>
@@ -59,13 +59,13 @@ $roles_result = $conn->query("SELECT * FROM role");
 <?php include 'topbar.php'; ?>
 
 <div class="container">
-    <h2>Edit User</h2>
+    <h2>Редактировать пользователя</h2>
 
     <form action="update_user.php" method="post">
         <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
 
         <div class="form-group">
-            <label for="username">Username:</label>
+            <label for="username">Имя пользователя:</label>
             <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
         </div>
 
@@ -75,7 +75,7 @@ $roles_result = $conn->query("SELECT * FROM role");
         </div>
 
         <div class="form-group">
-            <label for="role_id">Role:</label>
+            <label for="role_id">Роль:</label>
             <select id="role_id" name="role_id">
                 <?php while($role = $roles_result->fetch_assoc()): ?>
                     <option value="<?php echo $role['role_id']; ?>" <?php echo ($user['role_id'] == $role['role_id']) ? 'selected' : ''; ?> >
@@ -86,7 +86,7 @@ $roles_result = $conn->query("SELECT * FROM role");
         </div>
 
         <div class="form-group">
-            <input type="submit" value="Update User">
+            <input type="submit" value="Обновить пользователя">
         </div>
     </form>
 </div>

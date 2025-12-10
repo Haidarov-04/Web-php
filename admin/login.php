@@ -24,43 +24,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header("Location: dashboard.php");
             exit();
         } else {
-            $error = "Invalid password!";
+            $error = "Неверный пароль!";
         }
     } else {
-        $error = "User not found!";
+        $error = "Пользователь не найден!";
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Вход</title>
     <link rel="stylesheet" href="auth_style.css">
 </head>
 <body>
 
 <div class="container">
-    <h2>Login</h2>
+    <h2>Вход</h2>
     <?php if ($error): ?>
         <div class="message error"><?php echo $error; ?></div>
     <?php endif; ?>
     <form method="post" action="">
         <div class="form-group">
-            <label>Username:</label>
+            <label>Имя пользователя:</label>
             <input type="text" name="username" required>
         </div>
         <div class="form-group">
-            <label>Password:</label>
+            <label>Пароль:</label>
             <input type="password" name="password" required>
         </div>
         <div class="form-group">
-            <input type="submit" value="Login">
+            <input type="submit" value="Войти">
         </div>
     </form>
     <div class="text-center">
-        <a href="registration.php">Register here</a>
+        <a href="registration.php">Зарегистрируйтесь здесь</a>
     </div>
 </div>
 

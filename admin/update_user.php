@@ -24,7 +24,7 @@ if (isset($_SESSION['role_id'])) {
 }
 
 if (!$is_admin) {
-    header("Location: dashboard.php?message=Error: You are not authorized to perform this action.");
+    header("Location: dashboard.php?message=Ошибка: у вас нет прав для выполнения этого действия.");
     exit;
 }
 
@@ -38,12 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt = $conn->prepare("UPDATE acces_users SET username = ?, mail = ?, role_id = ? WHERE id = ?");
         $stmt->bind_param("ssii", $username, $email, $role_id, $user_id);
         if ($stmt->execute()) {
-            header("Location: dashboard.php?message=User updated successfully.");
+            header("Location: dashboard.php?message=Пользователь успешно обновлен.");
         } else {
-            header("Location: dashboard.php?message=Error: Could not update user.");
+            header("Location: dashboard.php?message=Ошибка: не удалось обновить пользователя.");
         }
     } else {
-        header("Location: dashboard.php?message=Error: All fields are required.");
+        header("Location: dashboard.php?message=Ошибка: все поля обязательны для заполнения.");
     }
 } else {
     header("Location: dashboard.php");

@@ -16,7 +16,7 @@ if (isset($_GET['delete'])) {
         header("Location: contest_type.php");
         exit;
     } else {
-        echo "Error deleting record: " . $conn->error;
+        echo "Ошибка удаления записи: " . $conn->error;
     }
 }
 
@@ -24,7 +24,7 @@ $result = $conn->query("SELECT * FROM contest_type");
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Типы конкурсов</title>
@@ -49,7 +49,7 @@ $result = $conn->query("SELECT * FROM contest_type");
                         <td><?= $i++; ?></td>
                         <td><?= htmlspecialchars($row['name']); ?></td>
                         <td>
-                            <a href="contest_type_edit.php?id=<?= $row['id']; ?>">Изменить</a> | 
+                            <a href="contest_type_edit.php?id=<?= $row['id']; ?>">Редактировать</a> | 
                             <a href="contest_type.php?delete=<?= $row['id'] ?>" onclick="return confirm('Вы уверены, что хотите удалить этот тип конкурса?')">Удалить</a>
                         </td>
                     </tr>

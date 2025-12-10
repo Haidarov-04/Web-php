@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: contest_type.php");
             exit;
         } else {
-            $message = "Error: " . $conn->error;
+            $message = "Ошибка: " . $conn->error;
             $name = $newName; // Keep the submitted value in the form
         }
     } else {
@@ -49,17 +49,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Изменить тип конкурса</title>
+    <title>Редактировать тип конкурса</title>
     <link rel="stylesheet" href="../admin/auth_style.css">
     <link rel="stylesheet" href="../admin/topbar.css">
 </head>
 <body>
     <?php include '../admin/topbar.php'; ?>
     <div class="container">
-        <h1>Изменить тип конкурса</h1>
+        <h1>Редактировать тип конкурса</h1>
 
         <?php if (!empty($message)): ?>
             <p style="color: red;"><?= $message; ?></p>

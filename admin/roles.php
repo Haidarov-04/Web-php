@@ -23,7 +23,7 @@ if (isset($_SESSION['role_id'])) {
 }
 
 if (!$is_admin) {
-    header("Location: dashboard.php?message=Error: You are not authorized to perform this action.");
+    header("Location: dashboard.php?message=Ошибка: у вас нет прав для выполнения этого действия.");
     exit;
 }
 
@@ -42,22 +42,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("UPDATE role SET role = ? WHERE role_id = ?");
             $stmt->bind_param("si", $role_name, $role_id);
             if ($stmt->execute()) {
-                $message = "Role updated successfully.";
+                $message = "Роль успешно обновлена.";
             } else {
-                $error = "Error updating role.";
+                $error = "Ошибка обновления роли.";
             }
         } else {
             // Create
             $stmt = $conn->prepare("INSERT INTO role (role) VALUES (?)");
             $stmt->bind_param("s", $role_name);
             if ($stmt->execute()) {
-                $message = "Role created successfully.";
+                $message = "Роль успешно создана.";
             } else {
-                $error = "Error creating role.";
+                $error = "Ошибка создания роли.";
             }
         }
     } else {
-        $error = "Role name cannot be empty.";
+        $error = "Название роли не может быть пустым.";
     }
 }
 
@@ -69,12 +69,12 @@ if (isset($_GET['delete_id'])) {
         $stmt = $conn->prepare("DELETE FROM role WHERE role_id = ?");
         $stmt->bind_param("i", $delete_id);
         if ($stmt->execute()) {
-            $message = "Role deleted successfully.";
+            $message = "Роль успешно удалена.";
         } else {
-            $error = "Error deleting role.";
+            $error = "Ошибка удаления роли.";
         }
     } else {
-        $error = "This role cannot be deleted.";
+        $error = "Эту роль нельзя удалить.";
     }
 }
 
@@ -94,10 +94,10 @@ $roles_result = $conn->query("SELECT * FROM role ORDER BY role_id DESC");
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Manage Roles</title>
+    <title>Управление ролями</title>
     <link rel="stylesheet" href="auth_style.css">
     <link rel="stylesheet" href="topbar.css">
 </head>
@@ -107,7 +107,7 @@ $roles_result = $conn->query("SELECT * FROM role ORDER BY role_id DESC");
     <?php include 'topbar.php'; ?>
 
     <div class="content">
-        <h1>Manage Roles</h1>
+        <h1>Управление ролями</h1>
 
         <?php if ($message): ?>
             <div class="message success"><?php echo htmlspecialchars($message); ?></div>
@@ -116,36 +116,36 @@ $roles_result = $conn->query("SELECT * FROM role ORDER BY role_id DESC");
             <div class="message error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
 
-        <h3><?php echo $edit_role ? 'Edit Role' : 'Add New Role'; ?></h3>
+        <h3><?php echo $edit_role ? 'Редактировать роль' : 'Добавить новую роль'; ?></h3>
         <form action="roles.php" method="post">
             <input type="hidden" name="role_id" value="<?php echo $edit_role['role_id'] ?? ''; ?>">
             <div class="form-group">
-                <label>Role Name:</label>
+                <label>Название роли:</label>
                 <input type="text" name="role_name" value="<?php echo htmlspecialchars($edit_role['role'] ?? ''); ?>" required>
             </div>
             <div class="form-group">
-                <input type="submit" value="<?php echo $edit_role ? 'Update Role' : 'Add Role'; ?>">
+                <input type="submit" value="<?php echo $edit_role ? 'Обновить роль' : 'Добавить роль'; ?>">
                 <?php if ($edit_role): ?>
-                    <a href="roles.php">Cancel Edit</a>
+                    <a href="roles.php">Отменить редактирование</a>
                 <?php endif; ?>
             </div>
         </form>
 
-        <h3>All Roles</h3>
+        <h3>Все роли</h3>
         <table>
             <tr>
                 <th>ID</th>
-                <th>Role Name</th>
-                <th>Action</th>
+                <th>Название роли</th>
+                <th>Действие</th>
             </tr>
             <?php while($role = $roles_result->fetch_assoc()): ?>
             <tr>
                 <td><?php echo $role['role_id']; ?></td>
                 <td><?php echo htmlspecialchars($role['role']); ?></td>
                 <td>
-                    <a href="roles.php?edit_id=<?php echo $role['role_id']; ?>">Edit</a>
+                    <a href="roles.php?edit_id=<?php echo $role['role_id']; ?>">Редактировать</a>
                     <?php if ($role['role_id'] > 2): // Basic protection for first 2 roles ?>
-                    | <a href="roles.php?delete_id=<?php echo $role['role_id']; ?>" onclick="return confirm('Are you sure?');">Delete</a>
+                    | <a href="roles.php?delete_id=<?php echo $role['role_id']; ?>" onclick="return confirm('Вы уверены?');">Удалить</a>
                     <?php endif; ?>
                 </td>
             </tr>

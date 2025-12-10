@@ -24,7 +24,7 @@ if (isset($_SESSION['role_id'])) {
 }
 
 if (!$is_admin) {
-    header("Location: dashboard.php?message=Error: You are not authorized to perform this action.");
+    header("Location: dashboard.php?message=Ошибка: у вас нет прав для выполнения этого действия.");
     exit;
 }
 
@@ -34,7 +34,7 @@ $user_id = $_GET['id'] ?? null;
 if ($user_id) {
     // Prevent admin from deleting their own account
     if ($user_id == $_SESSION['user_id']) {
-        header("Location: dashboard.php?message=Error: You cannot delete your own account.");
+        header("Location: dashboard.php?message=Ошибка: вы не можете удалить свою учетную запись.");
         exit;
     }
 
@@ -42,11 +42,11 @@ if ($user_id) {
     $stmt = $conn->prepare("DELETE FROM acces_users WHERE id = ?");
     $stmt->bind_param("i", $user_id);
     if ($stmt->execute()) {
-        header("Location: dashboard.php?message=User deleted successfully.");
+        header("Location: dashboard.php?message=Пользователь успешно удален.");
     } else {
-        header("Location: dashboard.php?message=Error: Could not delete user.");
+        header("Location: dashboard.php?message=Ошибка: не удалось удалить пользователя.");
     }
 } else {
-    header("Location: dashboard.php?message=Error: User ID not specified.");
+    header("Location: dashboard.php?message=Ошибка: не указан ID пользователя.");
 }
 ?>
