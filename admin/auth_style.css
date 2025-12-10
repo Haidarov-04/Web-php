@@ -1,0 +1,190 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f2f2f7;
+    margin: 0;
+    padding: 20px;
+    padding-top: 80px; /* Push content down from fixed navbar */
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1000px; /* Wider like dashboard */
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: auto;
+}
+
+p {
+    color: #555;
+    font-size: 16px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 24px;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+select:focus {
+    border-color: #007aff;
+    outline: none;
+}
+
+input[type="submit"],
+button[type="submit"],
+button { /* Apply to all buttons for consistency */
+    width: 100%;
+    background-color: #007aff;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+input[type="submit"]:hover,
+button[type="submit"]:hover,
+button:hover {
+    background-color: #005bb5;
+}
+
+.message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Dashboard specific styles */
+.contest-main-container,
+.contest-type-main-container,
+.users-main-container,
+.admin-dashboard-main-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+}
+
+th, td {
+    border-bottom: 1px solid #f2f2f7;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+th {
+    background-color: #f8f8fa;
+    font-weight: 600;
+}
+
+th a {
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a {
+    color: #007aff;
+    display: inline-block;
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #ddd;
+    margin: 0 4px;
+    border-radius: 4px;
+}
+
+.pagination a.active {
+    background-color: #007aff;
+    color: white;
+    border: 1px solid #007aff;
+}
+
+.pagination a:hover:not(.active) {
+    background-color: #f2f2f7;
+}
+
+.back-button-bottom {
+    display: block;
+    text-align: center;
+    margin-top: 25px;
+    text-decoration: none;
+    color: #007aff;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.back-button-bottom:hover {
+    color: #005bb5;
+}

@@ -1,0 +1,44 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: flex-start; /* Group buttons to the left */
+    align-items: center;
+    z-index: 1000; /* Ensure it's on top */
+    padding: 5px 10px; /* Add some padding */
+}
+
+.navbar a {
+    float: left;
+    display: block;
+    color: #333;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.navbar a:hover {
+    background-color: #f2f2f7;
+}
+
+.navbar button {
+    background-color: #007aff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    margin: 5px;
+}
+
+.navbar button:hover {
+    background-color: #005bb5;
+}

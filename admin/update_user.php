@@ -1,0 +1,51 @@
+<?php
+session_start();
+include '../db_conn.php/db.php';
+
+// If the user is not logged in redirect to the login page
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
+// Check if the user is an admin
+$is_admin = false;
+if (isset($_SESSION['role_id'])) {
+    $role_id = $_SESSION['role_id'];
+    $stmt = $conn->prepare("SELECT role FROM role WHERE role_id = ?");
+    $stmt->bind_param("i", $role_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($role = $result->fetch_assoc()) {
+        if ($role['role'] == 'admin') {
+            $is_admin = true;
+        }
+    }
+}
+
+if (!$is_admin) {
+    header("Location: dashboard.php?message=Error: You are not authorized to perform this action.");
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $user_id = $_POST['id'] ?? null;
+    $username = $_POST['username'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $role_id = $_POST['role_id'] ?? null;
+
+    if ($user_id && $username && $email && $role_id) {
+        $stmt = $conn->prepare("UPDATE acces_users SET username = ?, mail = ?, role_id = ? WHERE id = ?");
+        $stmt->bind_param("ssii", $username, $email, $role_id, $user_id);
+        if ($stmt->execute()) {
+            header("Location: dashboard.php?message=User updated successfully.");
+        } else {
+            header("Location: dashboard.php?message=Error: Could not update user.");
+        }
+    } else {
+        header("Location: dashboard.php?message=Error: All fields are required.");
+    }
+} else {
+    header("Location: dashboard.php");
+}
+?>

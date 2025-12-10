@@ -1,0 +1,141 @@
+<?php
+session_start();
+include '../db_conn.php/db.php';
+
+// If the user is not logged in redirect to the login page
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
+// Check if the user is an admin
+$is_admin = false;
+if (isset($_SESSION['role_id'])) {
+    $role_id = $_SESSION['role_id'];
+    $stmt = $conn->prepare("SELECT role FROM role WHERE role_id = ?");
+    $stmt->bind_param("i", $role_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($role = $result->fetch_assoc()) {
+        if ($role['role'] == 'admin') {
+            $is_admin = true;
+        }
+    }
+}
+
+$users_result = null;
+$total_pages = 0;
+$search = '';
+$sort = 'id';
+$order = 'desc';
+
+// if ($is_admin) {
+    // Pagination, Search, and Sorting
+    $records_per_page = 10;
+    $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+    $offset = ($page - 1) * $records_per_page;
+    $search = $_GET['search'] ?? '';
+    $sort = $_GET['sort'] ?? 'id';
+    $order = $_GET['order'] ?? 'desc';
+
+    // Get total number of records
+    $count_query = "SELECT COUNT(*) as total FROM acces_users";
+    if ($search) {
+        $count_query .= " WHERE username LIKE ? OR mail LIKE ?";
+    }
+    $stmt = $conn->prepare($count_query);
+    if ($search) {
+        $search_param = "%$search%";
+        $stmt->bind_param("ss", $search_param, $search_param);
+    }
+    $stmt->execute();
+    $total_records = $stmt->get_result()->fetch_assoc()['total'];
+    $total_pages = ceil($total_records / $records_per_page);
+
+    // Get records for the current page
+    $query = "SELECT au.id, au.username, au.mail, r.role FROM acces_users au JOIN role r ON au.role_id = r.role_id";
+    if ($search) {
+        $query .= " WHERE username LIKE ? OR mail LIKE ?";
+    }
+    $query .= " ORDER BY $sort $order LIMIT ?, ?";
+    $stmt = $conn->prepare($query);
+    if ($search) {
+        $stmt->bind_param("ssii", $search_param, $search_param, $offset, $records_per_page);
+    } else {
+        $stmt->bind_param("ii", $offset, $records_per_page);
+    }
+    $stmt->execute();
+    $users_result = $stmt->get_result();
+// }
+
+$message = $_GET['message'] ?? '';
+$roles = $conn->query("SELECT * FROM role");
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="auth_style.css">
+    <link rel="stylesheet" href="topbar.css">
+</head>
+<body>
+
+<div class="admin-dashboard-main-container">
+    <?php include 'topbar.php'; ?>
+
+    <div class="content">
+        <h1>Admin Dashboard</h1>
+        <p class="text-center">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>! (<?php echo htmlspecialchars($role['role']); ?>)</p>
+        <p>This is the admin dashboard. You can manage users and other site settings here.</p>
+
+        <?php if ($message): ?>
+        <div class="message <?php echo strpos($message, 'Error') !== false ? 'error' : 'success'; ?>">
+            <?php echo htmlspecialchars($message); ?>
+        </div>
+        <?php endif; ?>
+
+        <form action="dashboard.php" method="get">
+            <input type="text" name="search" placeholder="Search by username or email" value="<?php echo htmlspecialchars($search); ?>">
+            <input type="submit" value="Search">
+        </form>
+
+        <h3>Registered Users</h3>
+        <table>
+            <tr>
+                <th><a href="?sort=id&order=<?php echo $sort == 'id' && $order == 'desc' ? 'asc' : 'desc'; ?>">ID</a></th>
+                <th><a href="?sort=username&order=<?php echo $sort == 'username' && $order == 'desc' ? 'asc' : 'desc'; ?>">Username</a></th>
+                <th><a href="?sort=mail&order=<?php echo $sort == 'mail' && $order == 'desc' ? 'asc' : 'desc'; ?>">Email</a></th>
+                <th><a href="?sort=r.role&order=<?php echo $sort == 'r.role' && $order == 'desc' ? 'asc' : 'desc'; ?>">Role</a></th>
+                <?php if ($is_admin): ?>
+                <th>Action</th>
+                <?php endif; ?>
+            </tr>
+            <?php while($user = $users_result->fetch_assoc()): ?>
+            <tr>
+                <td><?php echo $user['id']; ?></td>
+                <td><?php echo htmlspecialchars($user['username']); ?></td>
+                <td><?php echo htmlspecialchars($user['mail']); ?></td>
+                <td><?php echo htmlspecialchars($user['role']); ?></td>
+                <?php if ($is_admin): ?>
+                <td>
+                    <a href="edit_user.php?id=<?php echo $user['id']; ?>">Edit</a>
+                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                </td>
+                <?php endif; ?>
+            </tr>
+            <?php endwhile; ?>
+        </table>
+
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <a href="?page=<?php echo $i; ?>&search=<?php echo htmlspecialchars($search); ?>&sort=<?php echo $sort; ?>&order=<?php echo $order; ?>" class="<?php if ($page == $i) echo 'active'; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+        </div>
+        
+    </div>
+</div>
+
+</body>
+</html>
