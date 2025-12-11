@@ -4,9 +4,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
+
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../admin/login.php'); // Redirect to admin login
+    header('Location: ../admin/login.php'); 
     exit;
 }
 
@@ -14,19 +14,20 @@ $contest_type_id = isset($_GET['contest_type_id']) ? intval($_GET['contest_type_
 $id_contest = isset($_GET['id_contest']) ? intval($_GET['id_contest']) : 0;
 $message = '';
 
-// Step 3: Handle the final form submission to create the user
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contest_id'])) {
     $first_name = trim($_POST['first_name']);
     $last_name = trim($_POST['last_name']);
     $email = trim($_POST['email']);
     $contest_id = intval($_POST['contest_id']);
+    $type_category_id = isset($_POST['type_category_id']) ? intval($_POST['type_category_id']) : null;
     
     $imageName = null;
 
     if (empty($first_name) || empty($last_name) || empty($email) || $contest_id <= 0) {
         $message = "Все поля обязательны для заполнения.";
     } else {
-        // Handle image upload
+
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploades/';
             $baseName = preg_replace("/[^a-zA-Z0-9\._-]/", "", basename($_FILES['image']['name']));
@@ -35,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contest_id'])) {
     
             if (!move_uploaded_file($_FILES['image']['tmp_name'], $imagePath)) {
                 $message = "Ошибка при загрузке файла.";
-                $imageName = null; // Clear image name on failure
+                $imageName = null;
             }
         }
 
@@ -54,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contest_id'])) {
     }
 }
 
-// Fetch data for dropdowns
 $contest_types = $conn->query("SELECT id, name FROM contest_type ORDER BY name");
 
 $contests = null;
@@ -68,6 +68,7 @@ if ($contest_type_id > 0) {
 
 $contest_name = '';
 $contest_type_name = '';
+$type_categories = null;
 if($id_contest > 0) {
     $stmt = $conn->prepare("SELECT c.name as contest_name, ct.name as contest_type_name FROM contest c JOIN contest_type ct ON c.contest_type_id = ct.id WHERE c.id = ?");
     $stmt->bind_param("i", $id_contest);
@@ -78,12 +79,18 @@ if($id_contest > 0) {
         $contest_type_name = $data['contest_type_name'];
     }
     $stmt->close();
+
+    $stmt = $conn->prepare("SELECT id, name FROM contest WHERE id = ? ORDER BY name");
+    $stmt->bind_param("i", $id_contest);
+    $stmt->execute();
+    $type_categories = $stmt->get_result();
+    $stmt->close();
 }
 
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Добавить участника</title>
@@ -117,6 +124,14 @@ if($id_contest > 0) {
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required>
                 </div>
+                <br>
+                <label>
+                    <label for="type_category_id">Категория:</label>
+                    <?php while($category = $type_categories->fetch_assoc()):
+                        echo $category['name'];
+                    endwhile; ?>
+                </label>
+                
                 <br>
                 <div>
                     <label for="image">Изображение:</label>

@@ -2,13 +2,13 @@
 session_start();
 include '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
-// Check if the user is an admin
+
 $is_admin = false;
 if (isset($_SESSION['role_id'])) {
     $role_id = $_SESSION['role_id'];
@@ -28,17 +28,17 @@ if (!$is_admin) {
     exit;
 }
 
-// Get the user ID from the GET request
+
 $user_id = $_GET['id'] ?? null;
 
 if ($user_id) {
-    // Prevent admin from deleting their own account
+
     if ($user_id == $_SESSION['user_id']) {
         header("Location: dashboard.php?message=Ошибка: вы не можете удалить свою учетную запись.");
         exit;
     }
 
-    // Delete the user
+
     $stmt = $conn->prepare("DELETE FROM acces_users WHERE id = ?");
     $stmt->bind_param("i", $user_id);
     if ($stmt->execute()) {

@@ -4,9 +4,16 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
+
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../admin/login.php'); // Redirect to admin login
+    header('Location: ../admin/login.php'); 
+    exit;
+}
+
+
+$is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
+if (!$is_admin_or_manager) {
+    header("Location: contest.php?message=Ошибка: у вас нет прав для выполнения этого действия.");
     exit;
 }
 
@@ -20,10 +27,10 @@ if ($id <= 0) {
     exit;
 }
 
-// Fetch contest types for the dropdown
+
 $contest_types_result = $conn->query("SELECT * FROM contest_type ORDER BY name ASC");
 
-// Fetch the current contest record
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $stmt = $conn->prepare("SELECT name, contest_type_id FROM contest WHERE id = ?");
     $stmt->bind_param("i", $id);
@@ -89,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="contest_type_id">Тип конкурса:</label>
                 <select id="contest_type_id" name="contest_type_id" required>
                     <option value="">-- Выберите тип --</option>
-                    <?php mysqli_data_seek($contest_types_result, 0); // Reset pointer for the form population ?>
+                    <?php mysqli_data_seek($contest_types_result, 0); ?>
                     <?php while($type = $contest_types_result->fetch_assoc()): ?>
                         <option value="<?= $type['id']; ?>" <?= ($contest_type_id == $type['id']) ? 'selected' : ''; ?>>
                             <?= htmlspecialchars($type['name']); ?>

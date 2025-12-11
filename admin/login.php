@@ -59,9 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="submit" value="Войти">
         </div>
     </form>
-    <div class="text-center">
-        <a href="registration.php">Зарегистрируйтесь здесь</a>
-    </div>
 </div>
 
 </body>

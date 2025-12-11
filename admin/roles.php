@@ -2,13 +2,13 @@
 session_start();
 include '../db_conn.php/db.php';
 
-// Authentication and Authorization
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
-$is_admin = false;
+$is_admin_or_manager = false;
 if (isset($_SESSION['role_id'])) {
     $role_id_session = $_SESSION['role_id'];
     $stmt = $conn->prepare("SELECT role FROM role WHERE role_id = ?");
@@ -16,13 +16,13 @@ if (isset($_SESSION['role_id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     if ($role_session = $result->fetch_assoc()) {
-        if ($role_session['role'] == 'admin') {
-            $is_admin = true;
+        if ($role_session['role'] == 'admin' || $role_session['role'] == 'руководитель') {
+            $is_admin_or_manager = true;
         }
     }
 }
 
-if (!$is_admin) {
+if (!$is_admin_or_manager) {
     header("Location: dashboard.php?message=Ошибка: у вас нет прав для выполнения этого действия.");
     exit;
 }
@@ -61,10 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle Delete
+
 if (isset($_GET['delete_id'])) {
     $delete_id = $_GET['delete_id'];
-    // Prevent deleting the main admin and user roles if they are protected
     if ($delete_id > 2) {
         $stmt = $conn->prepare("DELETE FROM role WHERE role_id = ?");
         $stmt->bind_param("i", $delete_id);
@@ -78,7 +77,6 @@ if (isset($_GET['delete_id'])) {
     }
 }
 
-// Handle Edit
 if (isset($_GET['edit_id'])) {
     $edit_id = $_GET['edit_id'];
     $stmt = $conn->prepare("SELECT * FROM role WHERE role_id = ?");
@@ -88,7 +86,6 @@ if (isset($_GET['edit_id'])) {
     $edit_role = $result->fetch_assoc();
 }
 
-// Fetch all roles
 $roles_result = $conn->query("SELECT * FROM role ORDER BY role_id DESC");
 
 ?>
@@ -144,7 +141,7 @@ $roles_result = $conn->query("SELECT * FROM role ORDER BY role_id DESC");
                 <td><?php echo htmlspecialchars($role['role']); ?></td>
                 <td>
                     <a href="roles.php?edit_id=<?php echo $role['role_id']; ?>">Редактировать</a>
-                    <?php if ($role['role_id'] > 2): // Basic protection for first 2 roles ?>
+                    <?php if ($_SESSION['role_id'] == '1'): // Basic protection for first 2 roles ?>
                     | <a href="roles.php?delete_id=<?php echo $role['role_id']; ?>" onclick="return confirm('Вы уверены?');">Удалить</a>
                     <?php endif; ?>
                 </td>

@@ -4,13 +4,16 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
+
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../admin/login.php'); // Redirect to admin login
+    header('Location: ../admin/login.php'); 
     exit;
 }
 
-if (isset($_GET['delete'])) {
+
+$is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
+
+if ($is_admin_or_manager && isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
     if ($conn->query("DELETE FROM contest WHERE id=$id")) {
         header("Location: contest.php");
@@ -39,7 +42,9 @@ $result = $conn->query($sql);
     <?php include '../admin/topbar.php'; ?>
     <div class="contest-main-container">
         <h1>Конкурсы</h1>
-        <a href="contest_form.php">Добавить новый конкурс</a>
+        <?php if ($is_admin_or_manager): ?>
+            <a href="contest_form.php">Добавить новый конкурс</a>
+        <?php endif; ?>
         <br><br>
         <table>
             <tr>
@@ -55,9 +60,13 @@ $result = $conn->query($sql);
                         <td><?= htmlspecialchars($row['name']); ?></td>
                         <td><?= htmlspecialchars($row['contest_type_name']); ?></td>
                         <td>
-                            <a href="contest_edit.php?id=<?= $row['id']; ?>">Изменить</a> |
-                            <a href="../users/users.php?id_contest=<?= $row['id']; ?>">Пользователи</a> | 
-                            <a href="contest.php?delete=<?= $row['id'] ?>" onclick="return confirm('Вы уверены, что хотите удалить этот конкурс?')">Удалить</a>
+                            <?php if ($is_admin_or_manager): ?>
+                                <a href="contest_edit.php?id=<?= $row['id']; ?>">Изменить</a> |
+                            <?php endif; ?>
+                            <a href="../users/users.php?id_contest=<?= $row['id']; ?>">Пользователи</a>
+                            <?php if ($is_admin_or_manager): ?>
+                                | <a href="contest.php?delete=<?= $row['id'] ?>" onclick="return confirm('Вы уверены, что хотите удалить этот конкурс?')">Удалить</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endwhile; ?>

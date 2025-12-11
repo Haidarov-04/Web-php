@@ -2,23 +2,25 @@
 session_start();
 include '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
-// Check if the user is an admin
-$is_admin = false;
+
+$is_admin_or_manager = false;
+$user_role = '';
 if (isset($_SESSION['role_id'])) {
     $role_id = $_SESSION['role_id'];
     $stmt = $conn->prepare("SELECT role FROM role WHERE role_id = ?");
     $stmt->bind_param("i", $role_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($role = $result->fetch_assoc()) {
-        if ($role['role'] == 'admin') {
-            $is_admin = true;
+    if ($role_data = $result->fetch_assoc()) {
+        $user_role = $role_data['role'];
+        if ($user_role == 'admin' || $user_role == 'руководитель') {
+            $is_admin_or_manager = true;
         }
     }
 }
@@ -29,44 +31,42 @@ $search = '';
 $sort = 'id';
 $order = 'desc';
 
-// if ($is_admin) {
-    // Pagination, Search, and Sorting
-    $records_per_page = 10;
-    $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-    $offset = ($page - 1) * $records_per_page;
-    $search = $_GET['search'] ?? '';
-    $sort = $_GET['sort'] ?? 'id';
-    $order = $_GET['order'] ?? 'desc';
 
-    // Get total number of records
-    $count_query = "SELECT COUNT(*) as total FROM acces_users";
-    if ($search) {
-        $count_query .= " WHERE username LIKE ? OR mail LIKE ?";
-    }
-    $stmt = $conn->prepare($count_query);
-    if ($search) {
-        $search_param = "%$search%";
-        $stmt->bind_param("ss", $search_param, $search_param);
-    }
-    $stmt->execute();
-    $total_records = $stmt->get_result()->fetch_assoc()['total'];
-    $total_pages = ceil($total_records / $records_per_page);
+$records_per_page = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $records_per_page;
+$search = $_GET['search'] ?? '';
+$sort = $_GET['sort'] ?? 'id';
+$order = $_GET['order'] ?? 'desc';
 
-    // Get records for the current page
-    $query = "SELECT au.id, au.username, au.mail, r.role FROM acces_users au JOIN role r ON au.role_id = r.role_id";
-    if ($search) {
-        $query .= " WHERE username LIKE ? OR mail LIKE ?";
-    }
-    $query .= " ORDER BY $sort $order LIMIT ?, ?";
-    $stmt = $conn->prepare($query);
-    if ($search) {
-        $stmt->bind_param("ssii", $search_param, $search_param, $offset, $records_per_page);
-    } else {
-        $stmt->bind_param("ii", $offset, $records_per_page);
-    }
-    $stmt->execute();
-    $users_result = $stmt->get_result();
-// }
+
+$count_query = "SELECT COUNT(*) as total FROM acces_users";
+if ($search) {
+    $count_query .= " WHERE username LIKE ? OR mail LIKE ?";
+}
+$stmt = $conn->prepare($count_query);
+if ($search) {
+    $search_param = "%$search%";
+    $stmt->bind_param("ss", $search_param, $search_param);
+}
+$stmt->execute();
+$total_records = $stmt->get_result()->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $records_per_page);
+
+
+$query = "SELECT au.id, au.username, au.mail, r.role FROM acces_users au JOIN role r ON au.role_id = r.role_id";
+if ($search) {
+    $query .= " WHERE username LIKE ? OR mail LIKE ?";
+}
+$query .= " ORDER BY $sort $order LIMIT ?, ?";
+$stmt = $conn->prepare($query);
+if ($search) {
+    $stmt->bind_param("ssii", $search_param, $search_param, $offset, $records_per_page);
+} else {
+    $stmt->bind_param("ii", $offset, $records_per_page);
+}
+$stmt->execute();
+$users_result = $stmt->get_result();
 
 $message = $_GET['message'] ?? '';
 $roles = $conn->query("SELECT * FROM role");
@@ -87,7 +87,7 @@ $roles = $conn->query("SELECT * FROM role");
 
     <div class="content">
         <h1>Панель администратора</h1>
-        <p class="text-center">Добро пожаловать, <?php echo htmlspecialchars($_SESSION['username']); ?>! (<?php echo htmlspecialchars($role['role']); ?>)</p>
+        <p class="text-center">Добро пожаловать, <?php echo htmlspecialchars($_SESSION['username']); ?>! (<?php echo htmlspecialchars($user_role); ?>)</p>
         <p>Это панель администратора. Здесь вы можете управлять пользователями и другими настройками сайта.</p>
 
         <?php if ($message): ?>
@@ -108,7 +108,7 @@ $roles = $conn->query("SELECT * FROM role");
                 <th><a href="?sort=username&order=<?php echo $sort == 'username' && $order == 'desc' ? 'asc' : 'desc'; ?>">Имя пользователя</a></th>
                 <th><a href="?sort=mail&order=<?php echo $sort == 'mail' && $order == 'desc' ? 'asc' : 'desc'; ?>">Email</a></th>
                 <th><a href="?sort=r.role&order=<?php echo $sort == 'r.role' && $order == 'desc' ? 'asc' : 'desc'; ?>">Роль</a></th>
-                <?php if ($is_admin): ?>
+                <?php if ($is_admin_or_manager): ?>
                 <th>Действие</th>
                 <?php endif; ?>
             </tr>
@@ -118,7 +118,7 @@ $roles = $conn->query("SELECT * FROM role");
                 <td><?php echo htmlspecialchars($user['username']); ?></td>
                 <td><?php echo htmlspecialchars($user['mail']); ?></td>
                 <td><?php echo htmlspecialchars($user['role']); ?></td>
-                <?php if ($is_admin): ?>
+                <?php if ($is_admin_or_manager): ?>
                 <td>
                     <a href="edit_user.php?id=<?php echo $user['id']; ?>">Редактировать</a>
                     <a href="delete_user.php?id=<?php echo $user['id']; ?>" onclick="return confirm('Вы уверены, что хотите удалить этого пользователя?');">Удалить</a>

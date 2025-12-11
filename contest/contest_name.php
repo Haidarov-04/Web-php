@@ -4,9 +4,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../admin/login.php'); // Redirect to admin login
+    header('Location: ../admin/login.php'); 
     exit;
 }
 
@@ -28,12 +27,12 @@ $sql_users = $id > 0
 
 if ($result = $conn->query($sql_users)) {
     if ($result->num_rows > 0) {
-        // HTML table will be outputted below
+
     } else {
-        // HTML will be outputted below
+
     }
 } else {
-    // HTML will be outputted below
+
 }
 ?>
 <!DOCTYPE html>
@@ -60,7 +59,7 @@ if ($result = $conn->query($sql_users)) {
                 echo '<tr>';
                 echo '<td>' . $row['id'] . '</td>';
                 echo '<td>' . htmlspecialchars($row['name']) . '</td>';
-                echo '<td><a href="contest_type.php?id=' . $row['id'] . '">Все</a></td>';
+                echo '<td><a href="../users/users.php?id_type_category=' . $row['id'] . '">Все</a></td>';
                 echo '</tr>';
             }
             echo '</table>';

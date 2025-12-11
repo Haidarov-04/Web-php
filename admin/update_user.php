@@ -2,13 +2,13 @@
 session_start();
 include '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
-// Check if the user is an admin
+
 $is_admin = false;
 if (isset($_SESSION['role_id'])) {
     $role_id = $_SESSION['role_id'];

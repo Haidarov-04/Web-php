@@ -4,13 +4,13 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
+
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../admin/login.php'); // Redirect to admin login
+    header('Location: ../admin/login.php'); 
     exit;
 }
 
-$id_contest = null; // Initialize id_contest to null
+$id_contest = null; 
 if (isset($_GET['id_contest'])) {
    $id_contest = intval($_GET['id_contest']);
 }
@@ -18,7 +18,7 @@ if (isset($_GET['id_contest'])) {
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
 
-    // First, get the image path to delete the file
+    
     $user_query = $conn->query("SELECT image_path FROM users WHERE id=$id");
     if ($user_query && $user_query->num_rows > 0) {
         $user = $user_query->fetch_assoc();
@@ -30,13 +30,13 @@ if (isset($_GET['delete'])) {
         }
     }
 
-    // Now, delete the user record
+    
     if ($conn->query("DELETE FROM users WHERE id=$id")){
         echo "deleted";
     }else{
         echo "error", $conn->error();
     }
-    // Correct redirection to include id_contest if it exists
+    
     $redirect_url = "users.php";
     if ($id_contest !== null) {
         $redirect_url .= "?id_contest=" . $id_contest;
@@ -45,7 +45,7 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
-$contest_heading = "участники"; // Default heading
+$contest_heading = "участники"; 
 if ($id_contest !== null) {
     $contest_query = $conn->prepare("SELECT name FROM contest WHERE id = ?");
     $contest_query->bind_param("i", $id_contest);
@@ -65,7 +65,7 @@ $users_request = "SELECT u.id as id, u.first_name, u.last_name, u.email, u.image
                         WHERE u.contest_id = c.id 
                         and c_t.id = c.contest_type_id";
 
-if ($id_contest !== null) { // Use the initialized $id_contest
+if ($id_contest !== null) { 
     $users_request .= " AND u.contest_id = $id_contest";
 }
                         
@@ -74,6 +74,9 @@ if($result = $conn->query($users_request)){
 }else{
     echo "error";
 };
+?>
+<?php
+$is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,7 +90,9 @@ if($result = $conn->query($users_request)){
     <?php include '../admin/topbar.php'; ?>
     <div class="users-main-container">
         <h1><?= $contest_heading; ?></h1>
+        <?php if ($is_admin_or_manager): ?>
         <a href="create_user.php?id_contest=<?= $id_contest; ?>"> Добавить</a>
+        <?php endif; ?>
         <br><br>
         <table>
             <tr>
@@ -98,7 +103,9 @@ if($result = $conn->query($users_request)){
                 <th>Image</th>
                 <th>Конкурс</th>
                 <th>Номинация</th>
+                <?php if ($is_admin_or_manager): ?>
                 <th>Действия</th>
+                <?php endif; ?>
             </tr>
             <?php $i = 1; while($row = $result->fetch_assoc()){ ?>
                 <tr>
@@ -116,10 +123,12 @@ if($result = $conn->query($users_request)){
                     </td>
                     <td><?= $row['contest']; ?></td>
                     <td><?= $row['contest_type']; ?></td>
+                    <?php if ($is_admin_or_manager): ?>
                     <td>
                         <a href="update_users.php?id=<?= $row['id']; ?>&id_contest=<?= $id_contest; ?>">Изменить</a> | 
                         <a href="users.php?delete=<?= $row['id'] ?>&id_contest=<?= $id_contest; ?>" onclick="return confirm('Удалить?')">Удалить</a>
                     </td>
+                    <?php endif; ?>
                 </tr>
             <?php } ?>
         </table>
