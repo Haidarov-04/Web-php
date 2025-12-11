@@ -10,6 +10,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 4) {
+    header('Location: ../admin/dashboard.php');
+    exit;
+}
+
 
 $is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
 
@@ -23,10 +28,20 @@ if ($is_admin_or_manager && isset($_GET['delete'])) {
     }
 }
 
+$records_per_page = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $records_per_page;
+
+$count_query = "SELECT COUNT(*) as total FROM contest";
+$count_result = $conn->query($count_query);
+$total_records = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $records_per_page);
+
 $sql = "SELECT c.id, c.name, ct.name as contest_type_name 
         FROM contest c 
         JOIN contest_type ct ON c.contest_type_id = ct.id 
-        ORDER BY c.id DESC";
+        ORDER BY c.id DESC
+        LIMIT $records_per_page OFFSET $offset";
 $result = $conn->query($sql);
 
 ?>
@@ -76,6 +91,12 @@ $result = $conn->query($sql);
                 </tr>
             <?php endif; ?>
         </table>
+
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <a href="?page=<?php echo $i; ?>" class="<?php if ($page == $i) echo 'active'; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+        </div>
     </div>
 </body>
 </html>

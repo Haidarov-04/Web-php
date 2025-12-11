@@ -14,6 +14,9 @@
     <form action="/web/Project/users/users.php" method="get">
         <button type="submit">Пользователи</button>
     </form>
+    <form action="/web/Project/admin/role_4_users.php" method="get">
+        <button type="submit">Пользователи с ролью 4</button>
+    </form>
     <form action="/web/Project/admin/logout.php" method="post">
         <button type="submit">Выход</button>
     </form>

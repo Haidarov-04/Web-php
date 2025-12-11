@@ -4,12 +4,15 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once '../db_conn.php/db.php';
 
-
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../admin/login.php'); 
     exit;
 }
 
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 4) {
+    header('Location: ../admin/dashboard.php');
+    exit;
+}
 
 $is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
 if (!$is_admin_or_manager) {
@@ -27,9 +30,7 @@ if ($id <= 0) {
     exit;
 }
 
-
 $contest_types_result = $conn->query("SELECT * FROM contest_type ORDER BY name ASC");
-
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $stmt = $conn->prepare("SELECT name, contest_type_id FROM contest WHERE id = ?");

@@ -1,10 +1,18 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-session_start();
-
-include '../db_conn.php/db.php';
+ session_start();
+include_once __DIR__ . '/../db_conn.php/db.php';
+// include 'auth_check.php';
 include 'mail/send_mail.php';
+$is_admin = false;
+
+
+if (isset($_SESSION['role_id'])) {
+    if ($_SESSION['role_id'] == 1) {
+        $is_admin = true;
+    }
+}
 
 $error = "";
 $success = "";
@@ -12,8 +20,13 @@ $success = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username'] ?? "");
     $email = trim($_POST['email'] ?? "");
-    $password = "12345";  // фиксированный пароль
-    $role_id = $_POST['role_id'] ?? 2;
+    $password = random_int(100000, 999999);
+    if ($is_admin) {
+        $role_id = $_POST['role_id'] ?? 2;
+    } else {
+        $role_id = 4;
+    }
+
 
     if ($username && $email && $password) {
 
@@ -27,9 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error = "Имя пользователя или email уже существует!";
         } else {
 
-            // Генерация 6-значного кода
-            $verify_code = random_int(100000, 999999);
-
             $hash = password_hash($password, PASSWORD_DEFAULT);
 
             // Добавляем verify_code в базу
@@ -41,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($stmt->execute()) {
 
                 // Отправка кода на Gmail
-                if (sendVerificationEmail($email, $verify_code, $username)) {
+                if (sendVerificationEmail($email, $password, $username)) {
                     $success = "Регистрация успешна! Код подтверждения отправлен на email.";
                 } else {
                     $error = "Пользователь создан, но email не отправлен!";
@@ -71,7 +81,9 @@ $roles = $conn->query("SELECT * FROM role");
 <body>
 
 <div class="container">
+    <?php if ($is_admin): ?>
     <?php include '../admin/topbar.php'; ?>
+    <?php endif; ?>
     <h2>Регистрация</h2>
 
     <?php if ($error): ?>
@@ -93,6 +105,7 @@ $roles = $conn->query("SELECT * FROM role");
             <input type="email" name="email" required>
         </div>
 
+        <?php if ($is_admin): ?>
         <div class="form-group">
             <label>Роль:</label>
             <select name="role_id">
@@ -103,11 +116,21 @@ $roles = $conn->query("SELECT * FROM role");
                 <?php endwhile; ?>
             </select>
         </div>
+        <?php endif; ?>
 
         <div class="form-group">
             <input type="submit" value="Зарегистрироваться">
         </div>
+                    
     </form>
+    <?php 
+    if (!isset($_SESSION['user_id'])) {
+    
+    echo '<div class="form-group">
+            <p>Уже зарегистрированы? <a href="login.php">Войти</a></p>
+          </div>';
+    }
+    ?>
 </div>
 
 </body>

@@ -1,26 +1,5 @@
 <?php
-session_start();
-include '../db_conn.php/db.php';
-
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-$is_admin_or_manager = false;
-if (isset($_SESSION['role_id'])) {
-    $role_id_session = $_SESSION['role_id'];
-    $stmt = $conn->prepare("SELECT role FROM role WHERE role_id = ?");
-    $stmt->bind_param("i", $role_id_session);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($role_session = $result->fetch_assoc()) {
-        if ($role_session['role'] == 'admin' || $role_session['role'] == 'руководитель') {
-            $is_admin_or_manager = true;
-        }
-    }
-}
+include 'auth_check.php';
 
 if (!$is_admin_or_manager) {
     header("Location: dashboard.php?message=Ошибка: у вас нет прав для выполнения этого действия.");

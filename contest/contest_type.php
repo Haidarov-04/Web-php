@@ -23,7 +23,17 @@ if ($is_admin_or_manager && isset($_GET['delete'])) {
     }
 }
 
-$result = $conn->query("SELECT * FROM contest_type");
+$records_per_page = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $records_per_page;
+
+$count_query = "SELECT COUNT(*) as total FROM contest_type";
+$count_result = $conn->query($count_query);
+$total_records = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $records_per_page);
+
+$sql = "SELECT * FROM contest_type LIMIT $records_per_page OFFSET $offset";
+$result = $conn->query($sql);
 
 ?>
 <!DOCTYPE html>
@@ -69,6 +79,11 @@ $result = $conn->query("SELECT * FROM contest_type");
                 </tr>
             <?php endif; ?>
         </table>
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <a href="?page=<?php echo $i; ?>" class="<?php if ($page == $i) echo 'active'; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+        </div>
     </div>
 </body>
 </html>

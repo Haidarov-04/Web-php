@@ -10,6 +10,17 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 4) {
+    header('Location: ../admin/dashboard.php');
+    exit;
+}
+
+$is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
+if (!$is_admin_or_manager) {
+    header("Location: ../admin/dashboard.php?message=Ошибка: у вас нет прав для выполнения этого действия.");
+    exit;
+}
+
 $contest_type_id = isset($_GET['contest_type_id']) ? intval($_GET['contest_type_id']) : 0;
 $id_contest = isset($_GET['id_contest']) ? intval($_GET['id_contest']) : 0;
 $message = '';

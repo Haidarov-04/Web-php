@@ -10,6 +10,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 4) {
+    header('Location: ../admin/dashboard.php');
+    exit;
+}
+
 
 $is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
 if (!$is_admin_or_manager) {

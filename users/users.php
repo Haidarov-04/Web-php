@@ -10,6 +10,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 4) {
+    header('Location: ../admin/dashboard.php');
+    exit;
+}
+
 $id_contest = null; 
 if (isset($_GET['id_contest'])) {
    $id_contest = intval($_GET['id_contest']);
@@ -68,6 +73,20 @@ $users_request = "SELECT u.id as id, u.first_name, u.last_name, u.email, u.image
 if ($id_contest !== null) { 
     $users_request .= " AND u.contest_id = $id_contest";
 }
+
+$records_per_page = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $records_per_page;
+
+$count_query = "SELECT COUNT(*) as total FROM users";
+if ($id_contest !== null) {
+    $count_query .= " WHERE contest_id = $id_contest";
+}
+$count_result = $conn->query($count_query);
+$total_records = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $records_per_page);
+
+$users_request .= " LIMIT $records_per_page OFFSET $offset";
                         
 if($result = $conn->query($users_request)){
 
@@ -132,6 +151,11 @@ $is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '
                 </tr>
             <?php } ?>
         </table>
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <a href="?page=<?php echo $i; ?><?php if ($id_contest !== null) echo '&id_contest=' . $id_contest; ?>" class="<?php if ($page == $i) echo 'active'; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+        </div>
     </div>
 </body>
 </html>

@@ -58,6 +58,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <input type="submit" value="Войти">
         </div>
+        <div class="form-group">
+            <p>Еще не зарегистрированы? <a href="registration.php">Зарегистрироваться</a></p>
+        </div>
     </form>
 </div>
 
