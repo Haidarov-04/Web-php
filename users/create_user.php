@@ -21,6 +21,14 @@ $last_name = '';
 $email = '';
 $selected_contests = [];
 
+// Pre-select the contest if coming from a specific contest page
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_GET['id_contest'])) {
+    $preselected_id = intval($_GET['id_contest']);
+    if ($preselected_id > 0) {
+        $selected_contests[] = $preselected_id;
+    }
+}
+
 // Fetch all contests and group them by contest type
 $all_contests_query = "SELECT c.id, c.name, ct.name as contest_type_name 
                        FROM contest c 
@@ -79,8 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $conn->commit();
                 
-                header("Location: users.php");
+                $redirect_url = "users.php";
+                if (!empty($_POST['origin_contest_id'])) {
+                    $redirect_url .= "?id_contest=" . intval($_POST['origin_contest_id']);
+                }
+                header("Location: " . $redirect_url);
                 exit;
+
             } catch (mysqli_sql_exception $exception) {
                 $conn->rollback();
                 $message = "Ошибка при создании пользователя: " . $exception->getMessage();
@@ -108,7 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p style="color: red;"><?= htmlspecialchars($message); ?></p>
         <?php endif; ?>
 
-        <form action="create_user.php" method="POST" enctype="multipart/form-data">
+        <form action="create_user.php?id_contest=<?= htmlspecialchars($_GET['id_contest'] ?? '') ?>" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="origin_contest_id" value="<?= htmlspecialchars($_GET['id_contest'] ?? '') ?>">
             <div>
                 <label for="first_name">Имя:</label>
                 <input type="text" id="first_name" name="first_name" value="<?= htmlspecialchars($first_name) ?>" required>

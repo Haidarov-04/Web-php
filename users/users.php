@@ -16,17 +16,25 @@ if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 4) {
 }
 
 $id_contest = null; 
-if (isset($_GET['id_contest'])) {
+if (isset($_GET['id_contest']) && intval($_GET['id_contest']) > 0) {
    $id_contest = intval($_GET['id_contest']);
 }
 
+$message = isset($_GET['message']) ? urldecode($_GET['message']) : '';
+$is_error = isset($_GET['error']);
+
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
+    $delete_message = '';
+    $delete_error = false;
 
-    
-    $user_query = $conn->query("SELECT image_path FROM users WHERE id=$id");
-    if ($user_query && $user_query->num_rows > 0) {
-        $user = $user_query->fetch_assoc();
+    // First, get the image path to delete the file
+    $user_query = $conn->prepare("SELECT image_path FROM users WHERE id = ?");
+    $user_query->bind_param("i", $id);
+    $user_query->execute();
+    $result = $user_query->get_result();
+    if ($result && $result->num_rows > 0) {
+        $user = $result->fetch_assoc();
         if (!empty($user['image_path'])) {
             $image_file_to_delete = 'uploades/' . $user['image_path'];
             if (file_exists($image_file_to_delete)) {
@@ -34,19 +42,31 @@ if (isset($_GET['delete'])) {
             }
         }
     }
+    $user_query->close();
 
+    // Then, delete the user from the database using a prepared statement
+    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+    $stmt->bind_param("i", $id);
     
-    if ($conn->query("DELETE FROM users WHERE id=$id")){
-        echo "deleted";
-    }else{
-        echo "error", $conn->error();
+    if ($stmt->execute()) {
+        $delete_message = "Участник успешно удален.";
+    } else {
+        $delete_message = "Ошибка при удалении участника: " . $stmt->error;
+        $delete_error = true;
     }
+    $stmt->close();
     
+    // Finally, redirect back to the user list with a status message
     $redirect_url = "users.php";
+    $query_params = [];
     if ($id_contest !== null) {
-        $redirect_url .= "?id_contest=" . $id_contest;
+        $query_params['id_contest'] = $id_contest;
     }
-    header("Location: " . $redirect_url);
+    $query_params['message'] = urlencode($delete_message);
+    if ($delete_error) {
+        $query_params['error'] = '1';
+    }
+    header("Location: " . $redirect_url . '?' . http_build_query($query_params));
     exit;
 }
 
@@ -137,11 +157,23 @@ $is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '
     <title>CRUD Users</title>
     <link rel="stylesheet" href="../admin/auth_style.css">
     <link rel="stylesheet" href="../admin/topbar.css">
+    <style>
+        .message { padding: 10px; margin-bottom: 15px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
 </head>
 <body>
     <?php include '../admin/topbar.php'; ?>
     <div class="users-main-container">
         <h1><?= $contest_heading; ?></h1>
+
+        <?php if ($message): ?>
+        <div class="message <?= $is_error ? 'error' : 'success' ?>">
+            <?= htmlspecialchars($message) ?>
+        </div>
+        <?php endif; ?>
+
         <?php if ($is_admin_or_manager): ?>
         <a href="create_user.php?id_contest=<?= $id_contest; ?>"> Добавить</a>
         <?php endif; ?>
