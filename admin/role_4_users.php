@@ -56,7 +56,7 @@ $message = $_GET['message'] ?? '';
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Пользователи с ролью 4</title>
+    <title>Новые зарегистрированные пользователи</title>
     <link rel="stylesheet" href="auth_style.css">
     <link rel="stylesheet" href="topbar.css">
 </head>
@@ -66,7 +66,7 @@ $message = $_GET['message'] ?? '';
     <?php include 'topbar.php'; ?>
 
     <div class="content">
-        <h1>Пользователи с ролью 4</h1>
+        <h1>Новые зарегистрированные пользователи</h1>
 
         <?php if ($message): ?>
         <div class="message <?php echo strpos($message, 'Error') !== false ? 'error' : 'success'; ?>">

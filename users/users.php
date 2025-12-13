@@ -64,35 +64,68 @@ if ($id_contest !== null) {
 }
 
 
-$users_request = "SELECT u.id as id, u.first_name, u.last_name, u.email, u.image_path,
-                        c_t.name as contest_type,  c.name as contest
-                        FROM users u, contest_type c_t, contest c
-                        WHERE u.contest_id = c.id 
-                        and c_t.id = c.contest_type_id";
-
-if ($id_contest !== null) { 
-    $users_request .= " AND u.contest_id = $id_contest";
-}
-
 $records_per_page = 10;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $records_per_page;
 
-$count_query = "SELECT COUNT(*) as total FROM users";
-if ($id_contest !== null) {
-    $count_query .= " WHERE contest_id = $id_contest";
+$params = [];
+$types = '';
+
+$is_all_users_view = ($id_contest === null);
+
+if ($is_all_users_view) {
+    // Logic for showing all unique users
+    $count_query = "SELECT COUNT(*) as total FROM users";
+    $users_request = "SELECT u.id, u.first_name, u.last_name, u.email, u.image_path, COUNT(uc.contest_id) as contest_count
+                      FROM users u
+                      LEFT JOIN user_contests uc ON u.id = uc.user_id
+                      GROUP BY u.id, u.first_name, u.last_name, u.email, u.image_path
+                      ORDER BY u.last_name, u.first_name";
+
+    $stmt_count = $conn->prepare($count_query);
+
+} else {
+    // Logic for showing users in a specific contest
+    $count_query = "SELECT COUNT(u.id) as total
+                    FROM users u
+                    INNER JOIN user_contests uc ON u.id = uc.user_id
+                    WHERE uc.contest_id = ?";
+    
+    $users_request = "SELECT u.id, u.first_name, u.last_name, u.email, u.image_path,
+                        c.name as contest, c.id as contest_id,
+                        ct.name as contest_type
+                      FROM users u
+                      INNER JOIN user_contests uc ON u.id = uc.user_id
+                      INNER JOIN contest c ON uc.contest_id = c.id
+                      INNER JOIN contest_type ct ON c.contest_type_id = ct.id
+                      WHERE uc.contest_id = ?
+                      ORDER BY u.last_name, u.first_name";
+
+    $params[] = $id_contest;
+    $types .= 'i';
+    $stmt_count = $conn->prepare($count_query);
+    $stmt_count->bind_param($types, ...$params);
 }
-$count_result = $conn->query($count_query);
+
+// Get total records for pagination
+$stmt_count->execute();
+$count_result = $stmt_count->get_result();
 $total_records = $count_result->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
+$stmt_count->close();
 
-$users_request .= " LIMIT $records_per_page OFFSET $offset";
-                        
-if($result = $conn->query($users_request)){
+// Get user records for the current page
+$users_request .= " LIMIT ? OFFSET ?";
+$types .= 'ii';
+$params[] = $records_per_page;
+$params[] = $offset;
 
-}else{
-    echo "error";
-};
+$stmt_users = $conn->prepare($users_request);
+$stmt_users->bind_param($types, ...$params);
+$stmt_users->execute();
+$result = $stmt_users->get_result();
+
+$start_index = ($page - 1) * $records_per_page;
 ?>
 <?php
 $is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '1' || $_SESSION['role_id'] == '3');
@@ -121,30 +154,39 @@ $is_admin_or_manager = isset($_SESSION['role_id']) && ($_SESSION['role_id'] == '
                 <th>Email</th>
                 <th>Image</th>
                 <th>Конкурс</th>
-                <th>Номинация</th>
                 <?php if ($is_admin_or_manager): ?>
                 <th>Действия</th>
                 <?php endif; ?>
             </tr>
             <?php $i = 1; while($row = $result->fetch_assoc()){ ?>
                 <tr>
-                    <td><?= $i++; ?></td>
-                    <!-- <td><?= $row['id']; ?></td> -->
-                    <td><?= $row['first_name']; ?></td>
-                    <td><?= $row['last_name']; ?></td>
-                    <td><?= $row['email']; ?></td>
+                    <td><?= $start_index + $i++; ?></td>
+                    <td><?= htmlspecialchars($row['first_name']); ?></td>
+                    <td><?= htmlspecialchars($row['last_name']); ?></td>
+                    <td><?= htmlspecialchars($row['email']); ?></td>
                     <td>
                         <?php if (!empty($row['image_path'])): ?>
-                            <img src="uploades/<?= $row['image_path']; ?>" width="50" height="50" alt="User Image">
+                            <img src="uploades/<?= htmlspecialchars($row['image_path']); ?>" width="50" height="50" alt="User Image">
                         <?php else: ?>
                             Нет рисунка
                         <?php endif; ?>
                     </td>
-                    <td><?= $row['contest']; ?></td>
-                    <td><?= $row['contest_type']; ?></td>
+                    
+                    <td>
+                        <?php if ($is_all_users_view): ?>
+                            <a href="user_contests.php?user_id=<?= $row['id']; ?>">
+                                Участвует в <?= $row['contest_count']; ?> конкурс(ах)
+                            </a>
+                        <?php else: ?>
+                            <a href="user_contests.php?user_id=<?= $row['id']; ?>">
+                                <?= htmlspecialchars($row['contest']); ?>
+                            </a>
+                        <?php endif; ?>
+                    </td>
+
                     <?php if ($is_admin_or_manager): ?>
                     <td>
-                        <a href="update_users.php?id=<?= $row['id']; ?>&id_contest=<?= $id_contest; ?>">Изменить</a> | 
+                        <a href="update_users.php?id=<?= $row['id']; ?>&id_contest=<?= $is_all_users_view ? '' : $row['contest_id']; ?>">Изменить</a> | 
                         <a href="users.php?delete=<?= $row['id'] ?>&id_contest=<?= $id_contest; ?>" onclick="return confirm('Удалить?')">Удалить</a>
                     </td>
                     <?php endif; ?>

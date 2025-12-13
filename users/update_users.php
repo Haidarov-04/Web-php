@@ -4,9 +4,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once '../db_conn.php/db.php';
 
-// If the user is not logged in redirect to the login page
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../admin/login.php'); // Redirect to admin login
+    header('Location: ../admin/login.php');
     exit;
 }
 
@@ -14,18 +13,15 @@ $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $id_contest = isset($_GET['id_contest']) ? intval($_GET['id_contest']) : 0;
 $message = '';
 
-// Only the user ID is essential to fetch the user.
 if ($id <= 0) {
-    header("Location: ../contest/contest.php"); // Or a general error page
+    header("Location: ../contest/contest.php");
     exit;
 }
 
-// Prepare the redirect URL for later use (back link and post-update redirect)
 $back_link = "users.php";
 if ($id_contest > 0) {
     $back_link .= "?id_contest=" . $id_contest;
 }
-
 
 // Fetch the current user record
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
@@ -40,17 +36,39 @@ if (!$user) {
     exit;
 }
 
+// Fetch all contests and group them by contest type
+$all_contests_query = "SELECT c.id, c.name, ct.name as contest_type_name 
+                       FROM contest c 
+                       INNER JOIN contest_type ct ON c.contest_type_id = ct.id 
+                       ORDER BY ct.name, c.name";
+$all_contests_result = $conn->query($all_contests_query);
+$grouped_contests = [];
+while ($row = $all_contests_result->fetch_assoc()) {
+    $grouped_contests[$row['contest_type_name']][] = $row;
+}
+
+// Fetch the IDs of contests this user is currently in
+$user_contests_result = $conn->prepare("SELECT contest_id FROM user_contests WHERE user_id = ?");
+$user_contests_result->bind_param("i", $id);
+$user_contests_result->execute();
+$user_contests_ids_result = $user_contests_result->get_result();
+$user_contests_ids = [];
+while ($row = $user_contests_ids_result->fetch_assoc()) {
+    $user_contests_ids[] = $row['contest_id'];
+}
+$user_contests_result->close();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $first_name = trim($_POST['first_name']);
     $last_name = trim($_POST['last_name']);
     $email = trim($_POST['email']);
+    $selected_contests = isset($_POST['contests']) ? (array)$_POST['contests'] : [];
     
-    $imageName = $user['image_path']; // Keep old image by default
+    $imageName = $user['image_path'];
 
     if (empty($first_name) || empty($last_name) || empty($email)) {
         $message = "Имя, фамилия и email обязательны для заполнения.";
     } else {
-        // Handle image upload if a new one is provided
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploades/';
             $baseName = preg_replace("/[^a-zA-Z0-9\._-]/", "", basename($_FILES['image']['name']));
@@ -58,36 +76,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $imagePath = $uploadDir . $newImageName;
     
             if (move_uploaded_file($_FILES['image']['tmp_name'], $imagePath)) {
-                // Delete the old image if it exists
                 if (!empty($user['image_path'])) {
                     $oldImagePath = $uploadDir . $user['image_path'];
                     if (file_exists($oldImagePath)) {
                         unlink($oldImagePath);
                     }
                 }
-                $imageName = $newImageName; // Set new image name for DB update
+                $imageName = $newImageName;
             } else {
                 $message = "Ошибка при загрузке нового изображения.";
             }
         }
 
         if (empty($message)) {
-            $stmt = $conn->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ?, image_path = ? WHERE id = ?");
-            $stmt->bind_param("ssssi", $first_name, $last_name, $email, $imageName, $id);
-            
-            if ($stmt->execute()) {
+            $conn->begin_transaction();
+            try {
+                $stmt = $conn->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ?, image_path = ? WHERE id = ?");
+                $stmt->bind_param("ssssi", $first_name, $last_name, $email, $imageName, $id);
+                $stmt->execute();
+                $stmt->close();
+
+                $stmt_delete = $conn->prepare("DELETE FROM user_contests WHERE user_id = ?");
+                $stmt_delete->bind_param("i", $id);
+                $stmt_delete->execute();
+                $stmt_delete->close();
+
+                if (!empty($selected_contests)) {
+                    $stmt_insert = $conn->prepare("INSERT INTO user_contests (user_id, contest_id) VALUES (?, ?)");
+                    foreach ($selected_contests as $contest_id_val) {
+                        $stmt_insert->bind_param("ii", $id, $contest_id_val);
+                        $stmt_insert->execute();
+                    }
+                    $stmt_insert->close();
+                }
+
+                $conn->commit();
                 header("Location: " . $back_link);
                 exit;
-            } else {
-                $message = "Ошибка при обновлении пользователя: " . $stmt->error;
+
+            } catch (mysqli_sql_exception $exception) {
+                $conn->rollback();
+                $message = "Ошибка при обновлении пользователя: " . $exception->getMessage();
             }
-            $stmt->close();
         }
     }
-    // Update user array with new data to display in form if update fails
+    
     $user['first_name'] = $first_name;
     $user['last_name'] = $last_name;
     $user['email'] = $email;
+    $user_contests_ids = $selected_contests; // Reflect changes in form if update fails
 }
 ?>
 <!DOCTYPE html>
@@ -122,6 +159,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" value="<?= htmlspecialchars($user['email']); ?>" required>
             </div>
+            <br>
+            <fieldset>
+                <legend>Участие в конкурсах</legend>
+                <?php foreach ($grouped_contests as $type_name => $contests_in_type): ?>
+                    <fieldset style="margin-top: 10px; border: 1px solid #ccc; padding: 10px;">
+                        <legend><?= htmlspecialchars($type_name) ?></legend>
+                        <?php foreach ($contests_in_type as $contest): ?>
+                            <div>
+                                <input type="checkbox" name="contests[]" id="contest_<?= $contest['id'] ?>" value="<?= $contest['id'] ?>" <?= in_array($contest['id'], $user_contests_ids) ? 'checked' : '' ?>>
+                                <label for="contest_<?= $contest['id'] ?>"><?= htmlspecialchars($contest['name']) ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </fieldset>
+                <?php endforeach; ?>
+            </fieldset>
             <br>
             <div>
                 <?php if (!empty($user['image_path'])): ?>
