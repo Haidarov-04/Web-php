@@ -66,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $imageName = $user['image_path'];
 
-    if (empty($first_name) || empty($last_name) || empty($email)) {
-        $message = "Имя, фамилия и email обязательны для заполнения.";
+    if (empty($first_name) || empty($last_name) || empty($email) || empty($selected_contests)) {
+        $message = "Имя, фамилия, email и хотя бы один конкурс обязательны для заполнения.";
     } else {
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploades/';
