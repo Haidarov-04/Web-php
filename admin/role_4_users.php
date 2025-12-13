@@ -21,9 +21,9 @@ $sort = $_GET['sort'] ?? 'id';
 $order = $_GET['order'] ?? 'desc';
 
 
-$count_query = "SELECT COUNT(*) as total FROM acces_users WHERE role_id = 4";
+$count_query = "SELECT COUNT(*) as total FROM acces_users";
 if ($search) {
-    $count_query .= " AND (username LIKE ? OR mail LIKE ?)";
+    $count_query .= " WHERE username LIKE ? OR mail LIKE ?";
 }
 $stmt = $conn->prepare($count_query);
 if ($search) {
@@ -35,9 +35,9 @@ $total_records = $stmt->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
 
 
-$query = "SELECT au.id, au.username, au.mail, r.role FROM acces_users au JOIN role r ON au.role_id = r.role_id WHERE au.role_id = 4";
+$query = "SELECT au.id, au.username, au.mail, r.role FROM acces_users au JOIN role r ON au.role_id = r.role_id";
 if ($search) {
-    $query .= " AND (username LIKE ? OR mail LIKE ?)";
+    $query .= " WHERE username LIKE ? OR mail LIKE ?";
 }
 $query .= " ORDER BY $sort $order LIMIT ?, ?";
 $stmt = $conn->prepare($query);
@@ -56,7 +56,7 @@ $message = $_GET['message'] ?? '';
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Новые зарегистрированные пользователи</title>
+    <title>Зарегистрированные пользователи</title>
     <link rel="stylesheet" href="auth_style.css">
     <link rel="stylesheet" href="topbar.css">
 </head>
@@ -66,7 +66,7 @@ $message = $_GET['message'] ?? '';
     <?php include 'topbar.php'; ?>
 
     <div class="content">
-        <h1>Новые зарегистрированные пользователи</h1>
+        <h1>Зарегистрированные пользователи</h1>
 
         <?php if ($message): ?>
         <div class="message <?php echo strpos($message, 'Error') !== false ? 'error' : 'success'; ?>">
@@ -79,14 +79,16 @@ $message = $_GET['message'] ?? '';
             <input type="submit" value="Поиск">
         </form>
 
-        <h3>Пользователи</h3>
+        <h3>Все пользователи</h3>
         <table>
             <tr>
                 <th><a href="?sort=id&order=<?php echo $sort == 'id' && $order == 'desc' ? 'asc' : 'desc'; ?>">ID</a></th>
                 <th><a href="?sort=username&order=<?php echo $sort == 'username' && $order == 'desc' ? 'asc' : 'desc'; ?>">Имя пользователя</a></th>
                 <th><a href="?sort=mail&order=<?php echo $sort == 'mail' && $order == 'desc' ? 'asc' : 'desc'; ?>">Email</a></th>
                 <th><a href="?sort=r.role&order=<?php echo $sort == 'r.role' && $order == 'desc' ? 'asc' : 'desc'; ?>">Роль</a></th>
+                <?php if ($is_admin_or_manager): ?>
                 <th>Действие</th>
+                <?php endif; ?>
             </tr>
             <?php while($user = $users_result->fetch_assoc()): ?>
             <tr>
@@ -94,10 +96,12 @@ $message = $_GET['message'] ?? '';
                 <td><?php echo htmlspecialchars($user['username']); ?></td>
                 <td><?php echo htmlspecialchars($user['mail']); ?></td>
                 <td><?php echo htmlspecialchars($user['role']); ?></td>
+                <?php if ($is_admin_or_manager): ?>
                 <td>
-                    <a href="approve_user.php?id=<?php echo $user['id']; ?>">Одобрить</a>
-                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" onclick="return confirm('Вы уверены, что хотите удалить этого пользователя?');">Отклонять</a>
+                    <a href="edit_user.php?id=<?php echo $user['id']; ?>">Редактировать</a>
+                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" onclick="return confirm('Вы уверены, что хотите удалить этого пользователя?');">Удалить</a>
                 </td>
+                <?php endif; ?>
             </tr>
             <?php endwhile; ?>
         </table>
